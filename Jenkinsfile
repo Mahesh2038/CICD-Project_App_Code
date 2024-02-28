@@ -15,7 +15,7 @@ environment {
         // }
         stage('Build the code') {
             steps {
-                sh 'mvn clean deploy'
+                sh 'mvn clean install'
             }
         }
         stage('SonarQube code analysis') {
