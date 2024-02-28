@@ -18,5 +18,15 @@ environment {
                 sh 'mvn clean deploy'
             }
         }
+        stage('SonarQube code analysis') {
+            environment {
+                scannerHome = tool 'mk-sonarqube-scanner'
+            }
+            steps {
+                withSonarQubeEnv('mk-sonarqube-server') {
+                    sh "${scannerHome}/bin/sonar-scanner" //This will communicate with SonarQube server and send analysis report.
+                }
+            }
+        }
     }
 }
