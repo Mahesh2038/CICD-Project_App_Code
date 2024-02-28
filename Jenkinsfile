@@ -20,7 +20,7 @@ environment {
         }
         stage('SonarQube code analysis') {
             environment {
-                scannerHome = tool 'mk-sonarqube-scanner'
+                scannerHome = tool 'mk-sonarqube-scanner'  // Define sonar scanner in Env variable.
             }
             steps {
                 withSonarQubeEnv('mk-sonarqube-server') {
