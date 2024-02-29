@@ -1,3 +1,4 @@
+def registry = 'http://192.168.33.12:8082/'
 pipeline {
     agent {
         node {
@@ -23,16 +24,17 @@ environment {
                 sh 'mvn surefire-report:report' // This command is to run unit test cases separately.
             }
         }
-        stage('SonarQube code analysis') {
-            environment {
-                scannerHome = tool 'mk-sonarqube-scanner'  // Define sonar scanner in Env variable.
-            }
-            steps {
-                withSonarQubeEnv('mk-sonarqube-server') {
-                    sh "${scannerHome}/bin/sonar-scanner" //This will communicate with SonarQube server and send analysis report.
-                }
-            }
-        }
+        // stage('SonarQube code analysis') {
+        //     environment {
+        //         scannerHome = tool 'mk-sonarqube-scanner'  // Define sonar scanner in Env variable.
+        //     }
+        //     steps {
+        //         withSonarQubeEnv('mk-sonarqube-server') {
+        //             sh "${scannerHome}/bin/sonar-scanner" //This will communicate with SonarQube server and send analysis report.
+        //         }
+        //     }
+        // }
+        
         // stage('Quality Gate') {
         //     steps {
         //         script {
@@ -45,5 +47,31 @@ environment {
         //         }
         //     }
         // }
+        
+        stage("Jar Publish") {
+            steps {
+                script {
+                        echo '<--------------- Jar Publish Started --------------->'
+                        def server = Artifactory.newServer url:registry+"/artifactory" ,  credentialsId:"jenkins-jfrog-cred"
+                        def properties = "buildid=${env.BUILD_ID},commitid=${GIT_COMMIT}";
+                        def uploadSpec = """{
+                            "files": [
+                                {
+                                "pattern": "jarstaging/(*)",
+                                "target": "java-artifacts/{1}",
+                                "flat": "false",
+                                "props" : "${properties}",
+                                "exclusions": [ "*.sha1", "*.md5"]
+                                }
+                            ]
+                        }"""
+                        def buildInfo = server.upload(uploadSpec)
+                        buildInfo.env.collect()
+                        server.publishBuildInfo(buildInfo)
+                        echo '<--------------- Jar Publish Ended --------------->'  
+                
+                }
+            }   
+        }   
     }
 }
