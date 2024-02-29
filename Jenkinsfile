@@ -15,7 +15,12 @@ environment {
         // }
         stage('Build the code') {
             steps {
-                sh 'mvn clean install'
+                sh 'mvn clean deploy -Dmaven.test.skip=true'
+            }
+        }
+        stage('Unit test') {
+            steps {
+                sh 'mvn surefire-report:report' // This command is to run unit test cases separately.
             }
         }
         stage('SonarQube code analysis') {
@@ -25,6 +30,18 @@ environment {
             steps {
                 withSonarQubeEnv('mk-sonarqube-server') {
                     sh "${scannerHome}/bin/sonar-scanner" //This will communicate with SonarQube server and send analysis report.
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                script {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
                 }
             }
         }
