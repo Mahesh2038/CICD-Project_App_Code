@@ -98,6 +98,14 @@ environment {
                 echo '<--------------- Docker Publish Ended --------------->'  
                 }
             }
+        }
+        stage ("Deploy") {
+            steps {
+                script {
+                    echo 'Helm Deploy Started'
+                    sh 'helm install <Deployment Name> <Chart Name>'
+                }
+            }
         }   
     }
 }
